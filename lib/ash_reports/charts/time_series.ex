@@ -8,13 +8,12 @@ defmodule AshReports.Charts.TimeSeries do
   - Date range generation
   - Time-based aggregations
 
-  Uses Timex for advanced time manipulation and timezone support.
+  Uses Elixir's stdlib `Date`/`Calendar` for time manipulation.
 
   ## Features
 
   - **Multiple Bucket Sizes**: hour, day, week, month, quarter, year
   - **Gap Filling**: Fill missing time periods with zero/null values
-  - **Timezone Support**: Handle timezone conversions via Timex
   - **Flexible Input**: Works with Date, DateTime, NaiveDateTime
   - **Aggregation Integration**: Combine with Aggregator for time-based charts
 
@@ -274,19 +273,19 @@ defmodule AshReports.Charts.TimeSeries do
 
   defp bucket_period(%Date{} = date, :week, opts) do
     week_start = Keyword.get(opts, :week_start, :monday)
-    Timex.beginning_of_week(date, week_start)
+    Date.beginning_of_week(date, week_start)
   end
 
   defp bucket_period(%Date{} = date, :month, _opts) do
-    Timex.beginning_of_month(date)
+    Date.beginning_of_month(date)
   end
 
   defp bucket_period(%Date{} = date, :quarter, _opts) do
-    Timex.beginning_of_quarter(date)
+    beginning_of_quarter(date)
   end
 
   defp bucket_period(%Date{} = date, :year, _opts) do
-    Timex.beginning_of_year(date)
+    beginning_of_year(date)
   end
 
   defp bucket_period(%DateTime{} = datetime, bucket_type, opts) do
@@ -302,20 +301,20 @@ defmodule AshReports.Charts.TimeSeries do
   defp bucket_period(nil, _bucket_type, _opts), do: nil
 
   defp format_period(%Date{} = date, :day) do
-    Timex.format!(date, "{YYYY}-{0M}-{0D}")
+    Calendar.strftime(date, "%Y-%m-%d")
   end
 
   defp format_period(%Date{} = date, :week) do
-    {iso_year, iso_week} = Timex.iso_week(date)
+    {iso_year, iso_week} = :calendar.iso_week_number(Date.to_erl(date))
     "Week #{iso_week}, #{iso_year}"
   end
 
   defp format_period(%Date{} = date, :month) do
-    Timex.format!(date, "{Mshort} {YYYY}")
+    Calendar.strftime(date, "%b %Y")
   end
 
   defp format_period(%Date{} = date, :quarter) do
-    quarter = Timex.quarter(date)
+    quarter = div(date.month - 1, 3) + 1
     "Q#{quarter} #{date.year}"
   end
 
@@ -354,34 +353,43 @@ defmodule AshReports.Charts.TimeSeries do
   end
 
   defp generate_periods(start_date, end_date, :week) do
-    week_start = Timex.beginning_of_week(start_date, :monday)
-    week_end = Timex.beginning_of_week(end_date, :monday)
+    week_start = Date.beginning_of_week(start_date, :monday)
+    week_end = Date.beginning_of_week(end_date, :monday)
 
-    Stream.iterate(week_start, &Timex.shift(&1, weeks: 1))
+    Stream.iterate(week_start, &Date.shift(&1, week: 1))
     |> Enum.take_while(&(Date.compare(&1, week_end) != :gt))
   end
 
   defp generate_periods(start_date, end_date, :month) do
-    month_start = Timex.beginning_of_month(start_date)
-    month_end = Timex.beginning_of_month(end_date)
+    month_start = Date.beginning_of_month(start_date)
+    month_end = Date.beginning_of_month(end_date)
 
-    Stream.iterate(month_start, &Timex.shift(&1, months: 1))
+    Stream.iterate(month_start, &Date.shift(&1, month: 1))
     |> Enum.take_while(&(Date.compare(&1, month_end) != :gt))
   end
 
   defp generate_periods(start_date, end_date, :quarter) do
-    quarter_start = Timex.beginning_of_quarter(start_date)
-    quarter_end = Timex.beginning_of_quarter(end_date)
+    quarter_start = beginning_of_quarter(start_date)
+    quarter_end = beginning_of_quarter(end_date)
 
-    Stream.iterate(quarter_start, &Timex.shift(&1, months: 3))
+    Stream.iterate(quarter_start, &Date.shift(&1, month: 3))
     |> Enum.take_while(&(Date.compare(&1, quarter_end) != :gt))
   end
 
   defp generate_periods(start_date, end_date, :year) do
-    year_start = Timex.beginning_of_year(start_date)
-    year_end = Timex.beginning_of_year(end_date)
+    year_start = beginning_of_year(start_date)
+    year_end = beginning_of_year(end_date)
 
-    Stream.iterate(year_start, &Timex.shift(&1, years: 1))
+    Stream.iterate(year_start, &Date.shift(&1, year: 1))
     |> Enum.take_while(&(Date.compare(&1, year_end) != :gt))
+  end
+
+  # Stdlib replacements for Timex.beginning_of_quarter/1 and beginning_of_year/1.
+  defp beginning_of_quarter(%Date{} = date) do
+    %{date | month: div(date.month - 1, 3) * 3 + 1, day: 1}
+  end
+
+  defp beginning_of_year(%Date{} = date) do
+    %{date | month: 1, day: 1}
   end
 end

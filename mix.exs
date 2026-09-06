@@ -58,10 +58,10 @@ defmodule AshReports.MixProject do
       {:ex_cldr_calendars, "~> 1.26"},
 
       # Translation dependencies
-      {:gettext, "~> 0.24"},
+      {:gettext, "~> 0.24 or ~> 1.0"},
 
       # Optional dependencies
-      {:phoenix_live_view, "~> 0.20", optional: true},
+      {:phoenix_live_view, "~> 0.20 or ~> 1.0", optional: true},
 
       # Development and test dependencies
       {:sourceror, "~> 1.8", only: [:dev, :test], runtime: false},
@@ -79,7 +79,7 @@ defmodule AshReports.MixProject do
       # Chart generation dependencies (Stage 3)
       {:contex, "~> 0.5.0"},
       {:statistics, "~> 0.6.3"},
-      {:timex, "~> 3.7"},
+      # timex removed: incompatible with gettext 1.0 (green2). time_series.ex uses stdlib Date/Calendar.
 
       # Phase 5.1 - Interactive Data Visualization dependencies
       {:jason, "~> 1.4"},
