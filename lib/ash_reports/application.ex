@@ -29,6 +29,9 @@ defmodule AshReports.Application do
 
   alias AshReports.Charts.{Registry, Cache, PerformanceMonitor}
 
+  # Mix is unavailable in a release — capture the env at compile time, not at runtime.
+  @compile_env Mix.env()
+
   @doc """
   Starts the AshReports application supervisor.
 
@@ -55,7 +58,7 @@ defmodule AshReports.Application do
     ]
 
     # Add test endpoint in test environment for phoenix_test compatibility
-    if Mix.env() == :test do
+    if @compile_env == :test do
       [AshReports.TestEndpoint | base_children]
     else
       base_children
