@@ -439,6 +439,35 @@ defmodule AshReports.Layout.TransformerTest do
       assert content.format == :string
     end
 
+    test "transforms fields/labels whose style is a keyword list (the DSL shape)" do
+      # The `field`/`label` DSL stores `style` as a keyword list — empty `[]` by default, and a
+      # populated one like `[font_weight: :bold]` — not a map. Building the cell must not crash on
+      # that: `build_field_style/1`/`build_label_style/1` previously did `Map.get(style, :font_size)`
+      # and raised BadMapError on the list (an empty list is truthy, so `... || %{}` didn't help).
+      cell = %GridCell{
+        x: 0,
+        y: 0,
+        elements: [
+          %Field{source: :name, style: []},
+          %Field{source: :total, style: [font_weight: :bold, color: "red"]},
+          %Label{text: "Header", style: [font_weight: :bold]}
+        ]
+      }
+
+      assert {:ok, ir} = CellTransformer.transform(cell)
+      assert [plain_field, styled_field, styled_label] = ir.content
+
+      assert %IR.Content.Field{source: :name} = plain_field
+      assert plain_field.style == nil
+
+      assert %IR.Content.Field{source: :total} = styled_field
+      assert styled_field.style.font_weight == :bold
+      assert styled_field.style.color == "red"
+
+      assert %IR.Content.Label{text: "Header"} = styled_label
+      assert styled_label.style.font_weight == :bold
+    end
+
     test "transforms cell with multiple elements" do
       cell = %GridCell{
         x: 0,

@@ -139,16 +139,20 @@ defmodule AshReports.Layout.Transformer.Cell do
     end
   end
 
+  # `style` is a keyword list (empty `[]` by default) or a map, so read it through the same
+  # `get_style_prop/2` accessor `build_element_style/1` uses. Reading it with `Map.get/2` crashed
+  # on the keyword-list form (`Map.get(field, :style, %{}) || %{}` is `[]`, an empty list being
+  # truthy, and `Map.get/3` then raised on the list).
   defp build_label_style(%AshReports.Element.Label{} = label) do
-    style_map = Map.get(label, :style, %{}) || %{}
+    style = Map.get(label, :style) || %{}
 
     style_props = [
-      font_size: Map.get(style_map, :font_size),
-      font_weight: Map.get(style_map, :font_weight) || Map.get(label, :font_weight),
-      font_style: Map.get(style_map, :font_style) || Map.get(label, :font_style),
-      color: Map.get(style_map, :color) || Map.get(label, :color),
-      font_family: Map.get(style_map, :font_family) || Map.get(label, :font_family),
-      text_align: Map.get(style_map, :text_align) || Map.get(label, :align)
+      font_size: get_style_prop(style, :font_size),
+      font_weight: get_style_prop(style, :font_weight) || Map.get(label, :font_weight),
+      font_style: get_style_prop(style, :font_style) || Map.get(label, :font_style),
+      color: get_style_prop(style, :color) || Map.get(label, :color),
+      font_family: get_style_prop(style, :font_family) || Map.get(label, :font_family),
+      text_align: get_style_prop(style, :text_align) || Map.get(label, :align)
     ]
 
     if Enum.all?(style_props, fn {_k, v} -> is_nil(v) end) do
@@ -159,14 +163,14 @@ defmodule AshReports.Layout.Transformer.Cell do
   end
 
   defp build_field_style(%AshReports.Element.Field{} = field) do
-    style_map = Map.get(field, :style, %{}) || %{}
+    style = Map.get(field, :style) || %{}
 
     style_props = [
-      font_size: Map.get(style_map, :font_size),
-      font_weight: Map.get(style_map, :font_weight),
-      color: Map.get(style_map, :color),
-      font_family: Map.get(style_map, :font_family),
-      text_align: Map.get(style_map, :text_align) || Map.get(field, :align)
+      font_size: get_style_prop(style, :font_size),
+      font_weight: get_style_prop(style, :font_weight),
+      color: get_style_prop(style, :color),
+      font_family: get_style_prop(style, :font_family),
+      text_align: get_style_prop(style, :text_align) || Map.get(field, :align)
     ]
 
     if Enum.all?(style_props, fn {_k, v} -> is_nil(v) end) do
