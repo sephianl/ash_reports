@@ -114,6 +114,20 @@ defmodule AshReports.Renderer.Typst.ContentTest do
       assert result == "12.5%"
     end
 
+    test "generate_refs wraps an unformatted field in softbreak so long values can wrap" do
+      field = Content.field(:bat)
+      result = ContentRenderer.render(field, generate_refs: true)
+
+      assert result == "#softbreak(record.bat)"
+    end
+
+    test "generate_refs does not wrap formatted (numeric) fields in softbreak" do
+      field = Content.field(:amount, format: :number, decimal_places: 2)
+      result = ContentRenderer.render(field, generate_refs: true)
+
+      refute String.contains?(result, "softbreak")
+    end
+
     test "renders field with date format" do
       field = Content.field(:date, format: :date)
       result = ContentRenderer.render(field, data: %{date: ~D[2025-01-15]})

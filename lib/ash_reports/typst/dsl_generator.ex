@@ -104,6 +104,15 @@ defmodule AshReports.Typst.DSLGenerator do
         }
       }
 
+      // Helper: insert zero-width break opportunities after identifier separators so long
+      // unbroken tokens (UUIDs, codes, paths) wrap inside narrow table cells instead of
+      // overflowing their column. Invisible for short values; a no-op for non-strings.
+      #let softbreak(value) = if type(value) == str {
+        value.replace(regex("([-_/.:@])"), m => m.text + "\\u{200B}")
+      } else {
+        value
+      }
+
       #let #{report.name}(data, config: (:)) = {
         #{generate_page_setup(report, context)}
 
@@ -340,6 +349,7 @@ defmodule AshReports.Typst.DSLGenerator do
     """
     // Title Section
     #{Enum.map(title_bands, fn band -> generate_band_content(band, context) end) |> Enum.join("\n")}
+    v(0.6em)
     """
   end
 

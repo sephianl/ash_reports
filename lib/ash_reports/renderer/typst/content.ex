@@ -290,7 +290,12 @@ defmodule AshReports.Renderer.Typst.Content do
   # confusion and to make it clear the value is missing (not actually zero).
   # This also prevents any potential division-by-zero if these values were ever
   # used in calculations.
-  defp wrap_field_formatting(ref, nil, _decimal_places), do: "##{ref}"
+  #
+  # Unformatted values pass through `softbreak/1` (defined in the template preamble): it
+  # inserts zero-width break opportunities into long unbroken strings (UUIDs, codes) so they
+  # wrap inside narrow table cells instead of overflowing. It is a no-op for numbers and
+  # short values, so numeric fields render unchanged.
+  defp wrap_field_formatting(ref, nil, _decimal_places), do: "#softbreak(#{ref})"
 
   defp wrap_field_formatting(ref, :currency, decimal_places) do
     places = decimal_places || 2

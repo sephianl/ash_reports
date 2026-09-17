@@ -87,6 +87,36 @@ defmodule AshReports.Typst.DSLGeneratorTest do
       assert {:ok, template} = DSLGenerator.generate_template(report)
       assert String.contains?(template, "flipped: true")
     end
+
+    test "defines the softbreak helper so long tokens can wrap in table cells" do
+      report = %Report{name: :sb_report, title: "SB", bands: []}
+
+      assert {:ok, template} = DSLGenerator.generate_template(report)
+      assert String.contains?(template, "#let softbreak(value)")
+    end
+
+    test "adds vertical spacing below the title band" do
+      report = %Report{
+        name: :spaced_report,
+        title: "Spaced",
+        bands: [
+          %Band{
+            name: :title_band,
+            type: :title,
+            grids: [
+              %Grid{
+                name: :title_grid,
+                columns: 1,
+                elements: [%Label{name: :t, text: "Spaced"}]
+              }
+            ]
+          }
+        ]
+      }
+
+      assert {:ok, template} = DSLGenerator.generate_template(report)
+      assert String.contains?(template, "v(0.6em)")
+    end
   end
 
   describe "generate_band_section/2" do
