@@ -1244,6 +1244,11 @@ defmodule AshReports.Dsl do
         type: {:list, {:in, [:html, :pdf, :heex, :json]}},
         default: [:html],
         doc: "Supported output formats for this report."
+      ],
+      page_orientation: [
+        type: {:in, [:portrait, :landscape]},
+        default: :portrait,
+        doc: "Page orientation for paged formats (PDF): :portrait (default) or :landscape."
       ]
     ]
   end

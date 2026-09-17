@@ -68,6 +68,25 @@ defmodule AshReports.Typst.DSLGeneratorTest do
 
       assert {:error, {:generation_failed, _}} = DSLGenerator.generate_template(invalid_report)
     end
+
+    test "defaults to portrait: no flipped page directive" do
+      report = %Report{name: :portrait_report, title: "Portrait", bands: []}
+
+      assert {:ok, template} = DSLGenerator.generate_template(report)
+      refute String.contains?(template, "flipped: true")
+    end
+
+    test "landscape orientation flips the page" do
+      report = %Report{
+        name: :landscape_report,
+        title: "Landscape",
+        page_orientation: :landscape,
+        bands: []
+      }
+
+      assert {:ok, template} = DSLGenerator.generate_template(report)
+      assert String.contains?(template, "flipped: true")
+    end
   end
 
   describe "generate_band_section/2" do

@@ -229,10 +229,12 @@ defmodule AshReports.Typst.DSLGenerator do
   end
 
   defp generate_page_setup(report, context) do
+    flipped = if report.page_orientation == :landscape, do: "\n      flipped: true,", else: ""
+
     """
     // Page configuration
     set page(
-      paper: "#{get_paper_size(context.format)}",
+      paper: "#{get_paper_size(context.format)}",#{flipped}
       margin: (x: 2cm, y: 2cm),
       #{generate_page_headers_footers(report, context)}
     )
